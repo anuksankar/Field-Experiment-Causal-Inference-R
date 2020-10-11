@@ -1,0 +1,219 @@
+---
+title: 'HV Analysis - Scoring'
+author: 'W241 Dan, Anu, Keane' 
+output:
+  rmarkdown::github_document
+---
+
+```{r,  echo=FALSE}
+# load packages 
+library(foreign)
+library(data.table)
+library(sandwich)
+library(stargazer)
+library(ggplot2)
+library(gridExtra)
+
+set.seed(42)
+```
+
+## Data Import
+
+```{r import, echo=FALSE}
+# Import participant data
+d <- fread('../data/interim/participants_cl_blkrand.csv', header = TRUE) # Participant pre-treatment survey
+answers <- fread("../data/raw/answers.csv", header = TRUE) # Assessment answers
+a1 <- fread('../data/interim/assessment1_cl.csv', header = TRUE) # Assessment 1 results
+a2 <- fread('../data/interim/assessment2_cl.csv', header = TRUE) # Assessment 2 results
+
+```
+
+## Compliance Data
+
+```{r}
+
+# Add six columns - one for each day of studying and initialize to zero
+d <- data.table(d[ , c('day1', 'day2', 'day3', 'day5', 'day6', 'day7') := 
+                     list(c(rep(0, 49)), c(rep(0, 49)), c(rep(0, 49)), c(rep(0, 49)), c(rep(0, 49)), c(rep(0, 49)))])
+
+# set daily compliance value to '1' for those who have a survey entry on each day of the experiment -  annonymized names with 'nameslistt'
+
+d <- d[ , day1 := ifelse(name %in% list(nameslist), 1, day1)]
+d[day1 == 1, name]
+
+d <- d[ , day2 := ifelse(name %in% list(nameslist), 1, day2)]
+d[day2 == 1, name]
+
+d <- d[ , day3 := ifelse(name %in% list(nameslist), 1, day3)]
+
+d[day3 == 1, name]
+
+d <- d[ , day5 := ifelse(name %in% list(nameslist), 1, day5)]
+
+d[day5 == 1, name]
+
+d <- d[ , day6 := ifelse(name %in% list(nameslist), 1, day6)]
+
+d[day6 == 1, name]
+
+d <- d[ , day7 := ifelse(name %in% list(nameslist), 1, day7)]
+
+d[day7 == 1, name]
+
+```
+
+
+## Score Assessment 1
+
+```{r score_a1, echo=FALSE}
+a1$id <- c(1:nrow(a1))
+setkey(a1, id)
+
+# set initial score to be zero
+a1$score <- c(rep(0, max(a1$id)))
+
+#Calculate each participant's score
+for (row in a1$id ) {
+  score <- 0
+  if (a1[row, "q1_answer"] == answers[1,"Q1"]){
+    score <- score + 1
+  }
+  if (a1[row, "q2_answer"] == answers[1,"Q2"]){
+    score <- score + 1
+  }
+  if (a1[row, "q3_answer"] == answers[1,"Q3"]){
+    score <- score + 1
+  }
+  if (a1[row, "q4_answer"] == answers[1,"Q4"]){
+    score <- score + 1
+  }
+  if (a1[row, "q5_answer"] == answers[1,"Q5"]){
+    score <- score + 1
+  }
+  if (a1[row, "q6_answer"] == answers[1,"Q6"]){
+    score <- score + 1
+  }
+  if (a1[row, "q7_answer"] == answers[1,"Q7"]){
+    score <- score + 1
+  }
+  if (a1[row, "q8_answer"] == answers[1,"Q8"]){
+    score <- score + 1
+  }
+  if (a1[row, "q9_answer"] == answers[1,"Q9"]){
+    score <- score + 1
+  }
+  if (a1[row, "q10_answer"] == answers[1,"Q10"]){
+    score <- score + 1
+  }
+  if (a1[row, "q11_answer"] == answers[1,"Q11"]){
+    score <- score + 1
+  }
+  if (a1[row, "q12_answer"] == answers[1,"Q12"]){
+    score <- score + 1
+  }
+  if (a1[row, "q13_answer"] == answers[1,"Q13"]){
+    score <- score + 1
+  }
+  if (a1[row, "q14_answer"] == answers[1,"Q14"]){
+    score <- score + 1
+  }
+  if (a1[row, "q15_answer"] == answers[1,"Q15"]){
+    score <- score + 1
+  }
+
+  # Append scores 
+a1[row, "score"] <- score
+a1[row, "avg_time"] <- (a1[row,"q1_submit"] + a1[row, "q2_submit"] + a1[row, "q3_submit"] + a1[row, "q4_submit"] + a1[row, "q5_submit"] + a1[row, "q6_submit"] + a1[row, "q7_submit"] + a1[row, "q8_submit"] + a1[row, "q9_submit"] + a1[row, "q10_submit"] + a1[row, "q11_submit"] + a1[row, "q12_submit"] + a1[row, "q13_submit"] + a1[row, "q14_submit"] + a1[row, "q15_submit"]) / 15
+
+}
+```
+
+```{r score_a2, echo=FALSE}
+# Score Assessment 2
+a2$id <- c(1:nrow(a2))
+setkey(a2, id)
+
+# set initial score to be zero
+a2$score <- c(rep(0, max(a2$id)))
+
+#Calculate each participant's score
+for (row in a2$id ) {
+  score <- 0
+  avg_time <- 0
+  if (a2[row, "q1_answer"] == answers[2,"Q1"]){
+    score <- score + 1
+  }
+  if (a2[row, "q2_answer"] == answers[2,"Q2"]){
+    score <- score + 1
+  }
+  if (a2[row, "q3_answer"] == answers[2,"Q3"]){
+    score <- score + 1
+  }
+  if (a2[row, "q4_answer"] == answers[2,"Q4"]){
+    score <- score + 1
+  }
+  if (a2[row, "q5_answer"] == answers[2,"Q5"]){
+    score <- score + 1
+  }
+  if (a2[row, "q6_answer"] == answers[2,"Q6"]){
+    score <- score + 1
+  }
+  if (a2[row, "q7_answer"] == answers[2,"Q7"]){
+    score <- score + 1
+  }
+  if (a2[row, "q8_answer"] == answers[2,"Q8"]){
+    score <- score + 1
+  }
+  if (a2[row, "q9_answer"] == answers[2,"Q9"]){
+    score <- score + 1
+  }
+  if (a2[row, "q10_answer"] == answers[2,"Q10"]){
+    score <- score + 1
+  }
+  if (a2[row, "q11_answer"] == answers[2,"Q11"]){
+    score <- score + 1
+  }
+  if (a2[row, "q12_answer"] == answers[2,"Q12"]){
+    score <- score + 1
+  }
+  if (a2[row, "q13_answer"] == answers[2,"Q13"]){
+    score <- score + 1
+  }
+  if (a2[row, "q14_answer"] == answers[2,"Q14"]){
+    score <- score + 1
+  }
+  if (a2[row, "q15_answer"] == answers[2,"Q15"]){
+    score <- score + 1
+  }
+
+  # Append scores
+a2[row, "score"] <- score
+a2[row, "avg_time"] <- (a2[row,"q1_submit"] + a2[row, "q2_submit"] + a2[row, "q3_submit"] + a2[row, "q4_submit"] + a2[row, "q5_submit"] + a2[row, "q6_submit"] + a2[row, "q7_submit"] + a2[row, "q8_submit"] + a2[row, "q9_submit"] + a2[row, "q10_submit"] + a2[row, "q11_submit"] + a2[row, "q12_submit"] + a2[row, "q13_submit"] + a2[row, "q14_submit"] + a2[row, "q15_submit"]) / 15
+}
+a2
+```
+
+### Merge and check
+
+```{r merge, echo=FALSE}
+# Merge results
+d[a1, on = 'email', a1_score := score]
+d[a1, on = 'email', a1_time := avg_time]
+d[a2, on = 'email', a2_score := score]
+d[a2, on = 'email', a2_time := avg_time]
+
+# Check data
+d[, sum(!is.na(a1_score))]
+d[, sum(!is.na(a2_score))]
+
+# Narrow down to only subjects that took both Assessment 1 and 2
+dt <- d[a1_score > 0& a2_score > 0,]
+table(dt[, treatment])
+```
+
+### Export scored data to processed folder
+
+```{r export, echo=FALSE}
+fwrite(dt, "../data/processed/analysis.csv")
+fwrite(d, "../data/processed/complete_dataset.csv")
+```
